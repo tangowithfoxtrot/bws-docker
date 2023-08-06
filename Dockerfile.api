@@ -1,0 +1,20 @@
+FROM --platform=linux/amd64 debian:latest as builder
+ENV DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /usr/local/bin
+RUN apt update && apt install -y curl unzip jq libssl3 openssl
+RUN export VER=$(curl -H "Accept: application/vnd.github+json" https://api.github.com/repos/bitwarden/sdk/releases | jq -r 'sort_by(.published_at) | reverse | .[].name | select(index("bws CLI") )'  | sed 's:.*bws CLI v::' | head -n 1) && \
+  curl -LO "https://github.com/bitwarden/sdk/releases/download/bws-v{$VER}/bws-x86_64-unknown-linux-gnu-{$VER}.zip"
+RUN unzip bws-x86_64-unknown-linux-gnu-*.zip
+RUN chmod +x ./bws
+
+FROM --platform=linux/amd64 python:latest
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libssl.so.3 /usr/lib/x86_64-linux-gnu/libssl.so.3
+COPY --from=builder /usr/lib/x86_64-linux-gnu/libcrypto.so.3 /usr/lib/x86_64-linux-gnu/libcrypto.so.3
+COPY --from=builder /usr/local/bin/bws /usr/local/bin/bws
+COPY --from=builder /usr/bin/jq /usr/bin/jq
+COPY src/ /app
+WORKDIR /app
+RUN pip3 install -r /app/requirements.txt
+EXPOSE 5000
+ENTRYPOINT [ "flask", "--app", "bws_api.py", "run" ]

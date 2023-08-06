@@ -1,0 +1,20 @@
+---
+version: '3.8'
+services:
+  secrets_api:
+    container_name: secrets_api
+    image: secrets_api
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - 5000:5000
+    # entrypoint:  # for testing only
+    #   - flask
+    #   - --app
+    #   - bws_api.py
+    #   - run
+    #   - --debug
+    #   - --host
+    #   - 0.0.0.0
+    stop_signal: SIGKILL
