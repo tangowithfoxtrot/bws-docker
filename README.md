@@ -24,3 +24,6 @@ services:
     ports:
       - 5000:5000
 ```
+
+## Disclaimer
+This is not an official Bitwarden product. It comes with no warranty. Use at your own risk.
